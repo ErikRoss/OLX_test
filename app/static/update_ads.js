@@ -22,8 +22,9 @@ function OnClick() {
   var limit = 50;
   var ready = false;
   if (ready == false) {
-      console.log(countAds() + "/" + limit);
-      if (countAds() >= limit) {
+      var ads_count = countAds();
+      console.log(ads_count + "/" + limit);
+      if (ads_count >= limit) {
         ready = true;
       }
       else {
