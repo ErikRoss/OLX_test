@@ -31,14 +31,15 @@ class Parser:
                 self.ads_urls.append(ad_url)
         return ads_urls
 
-    def collect_ads(self, socket, url, limit=100):
+    def collect_ads(self, socket, url, access_level):
         """
         Collect ads data
 
         :param socket: socketio
         :param url: category url
-        :param limit: limit of ads
+        :param access_level: access level of current user
         """
+        limit = access_level * 100
         threads = []
         page = 1
         i = 0
@@ -62,6 +63,8 @@ class Parser:
                     db.session.add(ad_item)
                     db.session.commit()
                     ad["id"] = ad_item.id
+                    if access_level in [1, 2]:
+                        ad["seller"] = ""
                     socket.emit('send ad', json.dumps(ad))
                     i += 1
                 else:
@@ -87,7 +90,7 @@ class Parser:
             currency = None
             print(ad_page)
         else:
-            price = "".join(price_value[:-1])
+            price = int("".join(price_value[:-1]))
             if price == "":
                 price = None
             currency = price_value[-1]

@@ -18,9 +18,11 @@ document.addEventListener("DOMContentLoaded", function() {
             var title = document.createElement("h3");
             title.innerHTML = ad_item.title;
             div.appendChild(title);
-            var seller = document.createElement("h4");
-            seller.innerHTML = ad_item.seller;
-            div.appendChild(seller);
+            if (ad_item.seller != '') {
+                var seller = document.createElement("h4");
+                seller.innerHTML = ad_item.seller;
+                div.appendChild(seller);
+            }
             var price = document.createElement("p");
             if (ad_item.price) {
               price.innerHTML = ad_item.price + " " + ad_item.currency;

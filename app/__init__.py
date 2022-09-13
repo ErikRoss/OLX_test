@@ -26,8 +26,7 @@ def parse_ads():
     print("Parsing ads...")
     par = parser.Parser()
     url = "https://www.olx.ua/d/uk/elektronika/telefony-i-aksesuary/?search%5Bphotos%5D=1"
-    limit = current_user.access_level * 100
-    par.collect_ads(socketio, url, limit)
+    par.collect_ads(socketio, url, current_user.access_level)
     print("Ads parsed")
 
 
