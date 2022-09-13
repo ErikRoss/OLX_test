@@ -18,8 +18,6 @@ login_manager = LoginManager(app)
 
 from app import models, routes, parser
 
-db.create_all()
-
 
 @socketio.on('parse ads')
 def parse_ads():
