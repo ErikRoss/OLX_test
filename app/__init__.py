@@ -1,6 +1,5 @@
 import os
 
-from Tools.scripts.win_add2path import ENV
 from flask import Flask
 from flask_sqlalchemy import SQLAlchemy
 from flask_login import LoginManager, current_user
@@ -10,10 +9,7 @@ from flask_socketio import SocketIO, emit, disconnect
 app = Flask(__name__)
 app.secret_key = b"w9485hj4q30n"
 app.config['STATIC_FOLDER'] = 'static'
-if ENV == 'prod':
-    app.config["SQLALCHEMY_DATABASE_URI"] = "postgresql://test_db:test!1109@localhost:5432/test_db"
-else:
-    app.config["SQLALCHEMY_DATABASE_URI"] = "postgres://qdgbbcskottuka:a5e052f3c6b73ec1f9cc3adb763855aba33b6081833c4f63174f06c7fb27ca14@ec2-99-80-170-190.eu-west-1.compute.amazonaws.com:5432/d9dnq059nslqqs"
+app.config["SQLALCHEMY_DATABASE_URI"] = "postgres://qdgbbcskottuka:a5e052f3c6b73ec1f9cc3adb763855aba33b6081833c4f63174f06c7fb27ca14@ec2-99-80-170-190.eu-west-1.compute.amazonaws.com:5432/d9dnq059nslqqs"
 app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
 socketio = SocketIO(app)
 db = SQLAlchemy(app)
