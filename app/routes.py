@@ -117,7 +117,3 @@ def add_user(username, password, access_level):
     db.session.add(user)
     db.session.commit()
     print("User added")
-
-
-if __name__ == '__main__':
-    app.run(debug=True)
