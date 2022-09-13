@@ -1,6 +1,6 @@
-import json
 import os
 
+from engineio.socket import Socket
 from flask import render_template, flash, redirect, url_for, request, session
 from flask_login import current_user, login_user, logout_user, login_required
 from werkzeug.security import generate_password_hash, check_password_hash
@@ -63,20 +63,6 @@ def home():
         return redirect(url_for("login"))
 
 
-@app.route('/delete_ad/<int:ad_id>', methods=['POST'])
-@login_required
-def delete_ad(ad_id):
-    if current_user.access_level in [1, 2, 3]:
-        ad = Ad.query.filter_by(id=ad_id).first()
-        db.session.delete(ad)
-        db.session.commit()
-        flash("Объявление удалено")
-        return redirect(url_for("home"))
-    else:
-        flash("У вас нет доступа к этой странице")
-        return redirect(url_for("login"))
-
-
 def delete_img(img):
     file_path = os.path.join(app.root_path, "static\\img", img)
     try:
@@ -119,7 +105,7 @@ def get_ads_list():
                 })
             else:
                 break
-        return json.dumps(ads_list)
+        return ads_list
     else:
         flash("У вас нет доступа к этой странице")
         return redirect(url_for("login"))

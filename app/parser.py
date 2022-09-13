@@ -1,7 +1,6 @@
-import re
+import json
 import requests
 from threading import Thread
-from sqlalchemy.exc import IntegrityError
 from bs4 import BeautifulSoup
 
 from app import db
@@ -9,23 +8,16 @@ from app.models import Ad
 
 
 class Parser:
-    def __init__(self, url, limit=100):
-        """
-        Init Parser
-
-        :param url: category url
-        :param limit: limit of ads
-        """
-        self.category_url = url
-        self.limit = limit
+    def __init__(self):
+        """Init Parser"""
         self.soup = None
+        self.ads = []
         self.ads_urls = []
         self.used_urls = []
 
-    def get_soup(self, url=None):
+    @staticmethod
+    def get_soup(url):
         """Get soup from url"""
-        if url is None:
-            url = self.category_url
         response = requests.get(url)
         return BeautifulSoup(response.text, 'html.parser')
 
@@ -39,27 +31,42 @@ class Parser:
                 self.ads_urls.append(ad_url)
         return ads_urls
 
-    def collect_ads(self):
-        """Collect ads data"""
-        ads_urls = []
+    def collect_ads(self, socket, url, limit=100):
+        """
+        Collect ads data
+
+        :param socket: socketio
+        :param url: category url
+        :param limit: limit of ads
+        """
         threads = []
         page = 1
-        while len(self.used_urls) < self.limit:
-            if page == 1:
-                url = self.category_url
-            else:
-                url = self.category_url + f'?p={page}'
+        i = 0
+        while len(self.used_urls) < limit:
+            if page != 1:
+                url = f'{url}?p={page}'
             self.soup = self.get_soup(url)
             ads_urls = self.get_ads_from_page()
             page += 1
-            for ad in ads_urls:
-                if len(self.used_urls) >= self.limit:
+            for ad_url in ads_urls:
+                if len(self.used_urls) >= limit:
                     break
-                threads.append(Thread(target=self.collect_ad, args=(ad,)))
+                threads.append(Thread(target=self.collect_ad, args=(ad_url,)))
                 threads[-1].start()
-                print(f"Collecting ad {len(self.used_urls) + 1} of {self.limit}")
+                print(f"Collecting ad {len(self.used_urls) + 1} of {limit}")
             for thread in threads:
                 thread.join()
+            for ad in self.ads:
+                if i < limit:
+                    ad_item = Ad(ad)
+                    db.session.add(ad_item)
+                    db.session.commit()
+                    ad["id"] = ad_item.id
+                    socket.emit('send ad', json.dumps(ad))
+                    i += 1
+                else:
+                    break
+            self.ads.clear()
         print(f"Collected {len(self.used_urls)} ads")
 
     def collect_ad(self, ad_page):
@@ -69,7 +76,10 @@ class Parser:
         :param ad_page: ad page source
         """
         soup = self.get_soup("https://www.olx.ua/" + ad_page)
-        title = soup.find('h1').text
+        try:
+            title = soup.find('h1').text
+        except AttributeError:
+            return
         try:
             price_value = soup.find('h3').text.split(" ")
         except AttributeError:
@@ -87,25 +97,21 @@ class Parser:
             image_name = None
         else:
             image_name = image.split("/")[-2] + ".jpg"
-            with open(f"static/img/{image_name}", "wb") as f:
+            with open(f"app/static/img/{image_name}", "wb") as f:
                 f.write(requests.get(image).content)
-        ad = {
+        ad_params = {
             'title': title,
             'price': price,
             'currency': currency,
             'image': image_name,
             'seller': soup.find('h4').text
         }
-        db.session.add(Ad(ad))
-        db.session.commit()
         self.used_urls.append(ad_page)
+        self.ads.append(ad_params)
 
 
-def main():
-    """Collect ads and write to db"""
-    parser = Parser('https://www.olx.ua/d/uk/transport/legkovye-avtomobili/')
-    parser.collect_ads()
+parser = Parser()
 
 
 if __name__ == '__main__':
-    main()
+    parser = Parser()

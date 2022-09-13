@@ -4,9 +4,6 @@
     <meta charset="UTF-8">
     <title>Home</title>
     <style>
-    table, th, td {
-      border:1px solid lightgrey;
-    }
     img {
       height: 300px;
     }
@@ -17,14 +14,17 @@
     function logout() {
     location.assign(`/logout`);
     }
-    function clear_ads() {
+    function clearAds() {
     location.assign(`/clear_ads`);
     }
-    function delete_ad(ad_id) {
+    function deleteAd(ad_id) {
     location.assign(`/delete_ad/${ad_id}`);
     }
 </script>
-<script src="{{url_for('static', filename='update_ads.js')}}"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.0.1/socket.io.js"
+        integrity="sha512-q/dWJ3kcmjBLU4Qc47E4A9kTB4m3wuTY7vkFJDTZKjTs8jhyGQnaUrxa0Ytd0ssMZhbNua9hE+E7Qv1j+DyZwA=="
+        crossorigin="anonymous"></script>
+<script src="{{url_for('static', filename='ads.js')}}"></script>
 
 {% with messages = get_flashed_messages() %}
   {% if messages %}
@@ -36,13 +36,13 @@
   {% endif %}
 {% endwith %}
 {% block body %}{% endblock %}
-
 <button type="button" onclick="logout()">Выйти</button>
-<button type="button" onclick="OnClick()">Обновить</button>
-<button type="button" onclick="clear_ads()">Очистить</button>
+<button type="button" id="update">Обновить</button>
+<button type="button" onclick="clearAds()">Очистить</button>
+<button type="button" onclick="sortAds('upper')">По возрастанию цены</button>
+<button type="button" onclick="sortAds('lower')">По убыванию цены</button>
 
-<div id="ads_list" class="ads_list">
-</div>
-
+<ul id="ads_list" class="ads_list">
+</ul>
 </body>
 </html>
