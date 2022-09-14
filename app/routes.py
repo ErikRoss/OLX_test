@@ -64,12 +64,13 @@ def home():
 
 
 def delete_img(img):
-    file_path = os.path.join(app.root_path, "static\\img", img)
+    file_path = ("app/static/img/" + img)
     try:
         os.chmod(file_path, 0o777)
         os.remove(file_path)
+        print("Image deleted")
     except FileNotFoundError:
-        pass
+        print("File not found")
 
 
 @app.route('/clear_ads', methods=['GET', 'POST'])

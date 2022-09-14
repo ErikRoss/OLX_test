@@ -9,6 +9,7 @@ from flask_socketio import SocketIO, emit, disconnect
 app = Flask(__name__)
 app.secret_key = b"w9485hj4q30n"
 app.config['STATIC_FOLDER'] = 'static'
+# app.config["SQLALCHEMY_DATABASE_URI"] = "postgresql://testapp:testapp2022@localhost:5432/testapp"
 app.config["SQLALCHEMY_DATABASE_URI"] = "postgresql://qdgbbcskottuka:a5e052f3c6b73ec1f9cc3adb763855aba33b6081833c4f63174f06c7fb27ca14@ec2-99-80-170-190.eu-west-1.compute.amazonaws.com:5432/d9dnq059nslqqs"
 app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
 socketio = SocketIO(app)
@@ -42,13 +43,14 @@ def delete_ad(ad_id):
 
 
 def delete_img(img):
-    file_path = os.path.join(app.root_path, "static\\img", img)
+    file_path = ("app/static/img/" + img)
     try:
         os.chmod(file_path, 0o777)
         os.remove(file_path)
+        print("Image deleted")
     except FileNotFoundError:
-        pass
+        print("File not found")
 
 
 if __name__ == '__main__':
-    socketio.run(app)
+    socketio.run(app, cors_allowed_origins="*", ping_timeout=120, ping_interval=3, debug=True)
