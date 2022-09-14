@@ -2,11 +2,13 @@ document.addEventListener("DOMContentLoaded", function() {
     var socket = io();
 
     function parseAds() {
+        console.log('parseAds');
         socket.emit('parse ads');
     }
     document.querySelector("#update").onclick = parseAds;
 
     socket.on('send ad', function(msg) {
+        console.log(msg);
         var ads_list_element = document.getElementById("ads_list");
         var ad_item = JSON.parse(msg);
         if (document.getElementById(ad_item.id) == null) {
