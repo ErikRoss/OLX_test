@@ -2,13 +2,12 @@ document.addEventListener("DOMContentLoaded", function() {
     const socket = io.connect('http://' + location.hostname + ':' + location.port);
 
     function parseAds() {
-        console.log('parseAds');
+        console.log('Parsing Ads');
         socket.emit('parse ads');
     }
     document.querySelector("#update").onclick = parseAds;
 
     socket.on('send ad', function(msg) {
-        console.log(msg);
         var ads_list_element = document.getElementById("ads_list");
         var ad_item = JSON.parse(msg);
         if (document.getElementById(ad_item.id) == null) {
@@ -54,7 +53,6 @@ document.addEventListener("DOMContentLoaded", function() {
 
 function deleteAd(id) {
     const socket = io.connect('http://' + location.hostname + ':' + location.port);
-    console.log(id);
     socket.emit('delete ad', id);
 
     socket.on('delete ad', function(id) {
@@ -68,13 +66,10 @@ function deleteAd(id) {
 function sortAds(direction) {
     const adsList = document.querySelector('#ads_list');
     const ads = document.querySelectorAll('li');
-    console.log(adsList);
-    console.log(ads);
     let sortingObj = {};
     ads.forEach((element, index) => {
         let adPrice = parseInt(element.querySelector('p').innerText);
         if (adPrice == NaN) {
-            console.log('NaN');
             adPrice = 0;
         }
         while (sortingObj[adPrice]) {
@@ -103,7 +98,6 @@ function sortAds(direction) {
     }
     adsList.innerHTML = '';
     keys.map(function(key, index){
-        console.log(key, index);
         adsList.insertAdjacentElement('beforeend', sortingObj[key]['element']);
     });
 
