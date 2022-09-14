@@ -54,6 +54,7 @@ document.addEventListener("DOMContentLoaded", function() {
 
 function deleteAd(id) {
     var socket = io();
+    console.log(id);
     socket.emit('delete ad', id);
 
     socket.on('delete ad', function(id) {

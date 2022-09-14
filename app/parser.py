@@ -3,7 +3,7 @@ import requests
 from threading import Thread
 from bs4 import BeautifulSoup
 
-from app import db
+from app import db, socketio
 from app.models import Ad
 
 
@@ -65,8 +65,10 @@ class Parser:
                     ad["id"] = ad_item.id
                     if access_level in [1, 2]:
                         ad["seller"] = ""
-                    socket.emit('send ad', json.dumps(ad))
+                    socketio.emit('send ad', json.dumps(ad))
+                    # socket.emit('send ad', json.dumps(ad))
                     i += 1
+                    socketio.disconnect()
                 else:
                     break
             self.ads.clear()
@@ -90,9 +92,11 @@ class Parser:
             currency = None
             print(ad_page)
         else:
-            price = int("".join(price_value[:-1]))
+            price = "".join(price_value[:-1])
             if price == "":
                 price = None
+            else:
+                price = int(price)
             currency = price_value[-1]
         try:
             image = soup.find('img', class_='css-1bmvjcs').get('src')
