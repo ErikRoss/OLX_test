@@ -2,8 +2,10 @@ import json
 import requests
 from threading import Thread
 from bs4 import BeautifulSoup
+from queue import Queue
+from flask_socketio import emit
 
-from app import db, socketio
+from app import db
 from app.models import Ad
 
 
@@ -31,7 +33,7 @@ class Parser:
                 self.ads_urls.append(ad_url)
         return ads_urls
 
-    def collect_ads(self, socket, url, access_level):
+    def collect_ads(self, url, access_level):
         """
         Collect ads data
 
@@ -49,14 +51,13 @@ class Parser:
             self.soup = self.get_soup(url)
             ads_urls = self.get_ads_from_page()
             page += 1
+            tasks = Queue()
             for ad_url in ads_urls:
-                if len(self.used_urls) >= limit:
-                    break
-                threads.append(Thread(target=self.collect_ad, args=(ad_url,)))
-                threads[-1].start()
-                print(f"Collecting ad {len(self.used_urls) + 1} of {limit}")
-            for thread in threads:
-                thread.join()
+                tasks.put(ad_url)
+            for _ in range(5):
+                thread = Thread(target=self.collect_ad, args=(tasks,))
+                thread.start()
+            tasks.join()
             for ad in self.ads:
                 if i < limit:
                     ad_item = Ad(ad)
@@ -65,56 +66,60 @@ class Parser:
                     ad["id"] = ad_item.id
                     if access_level in [1, 2]:
                         ad["seller"] = ""
-                    socketio.emit('send ad', json.dumps(ad))
-                    # socket.emit('send ad', json.dumps(ad))
+                    emit('send ad', json.dumps(ad))
                     i += 1
-                    socketio.disconnect()
                 else:
                     break
             self.ads.clear()
         print(f"Collected {len(self.used_urls)} ads")
 
-    def collect_ad(self, ad_page):
+    def collect_ad(self, ad_pages):
         """
         Collect ad data to db and download image
 
-        :param ad_page: ad page source
+        :param ad_pages: tasks list
         """
-        soup = self.get_soup("https://www.olx.ua/" + ad_page)
-        try:
-            title = soup.find('h1').text
-        except AttributeError:
-            return
-        try:
-            price_value = soup.find('h3').text.split(" ")
-        except AttributeError:
-            price = None
-            currency = None
-            print(ad_page)
-        else:
-            price = "".join(price_value[:-1])
-            if price == "":
+        while not ad_pages.empty():
+            ad_page = ad_pages.get()
+            print(f"Collecting ad {len(self.used_urls) + 1}")
+            soup = self.get_soup("https://www.olx.ua/" + ad_page)
+            try:
+                title = soup.find('h1').text
+            except AttributeError:
+                ad_pages.task_done()
+                return
+            try:
+                price_value = soup.find('h3').text.split(" ")
+            except AttributeError:
                 price = None
+                currency = None
+                print(ad_page)
             else:
-                price = int(price)
-            currency = price_value[-1]
-        try:
-            image = soup.find('img', class_='css-1bmvjcs').get('src')
-        except AttributeError:
-            image_name = None
-        else:
-            image_name = image.split("/")[-2] + ".jpg"
-            with open(f"app/static/img/{image_name}", "wb") as f:
-                f.write(requests.get(image).content)
-        ad_params = {
-            'title': title,
-            'price': price,
-            'currency': currency,
-            'image': image_name,
-            'seller': soup.find('h4').text
-        }
-        self.used_urls.append(ad_page)
-        self.ads.append(ad_params)
+                price = "".join(price_value[:-1])
+                if price == "":
+                    price = None
+                else:
+                    price = int(price)
+                currency = price_value[-1]
+            try:
+                image = soup.find('img', class_='css-1bmvjcs').get('src')
+            except AttributeError:
+                image_name = None
+            else:
+                image_name = image.split("/")[-2] + ".jpg"
+                with open(f"app/static/img/{image_name}", "wb") as f:
+                    f.write(requests.get(image).content)
+            ad_params = {
+                'title': title,
+                'price': price,
+                'currency': currency,
+                'image': image_name,
+                'seller': soup.find('h4').text
+            }
+            self.used_urls.append(ad_page)
+            self.ads.append(ad_params)
+            print("Collected")
+            ad_pages.task_done()
 
 
 parser = Parser()
