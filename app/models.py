@@ -27,7 +27,7 @@ class Ad(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     title = db.Column(db.String(240), nullable=False)
     price = db.Column(db.Integer, nullable=True)
-    currency = db.Column(db.String(50), nullable=False)
+    currency = db.Column(db.String(50), nullable=True)
     image = db.Column(db.String(128), nullable=True)
     seller = db.Column(db.String(128), nullable=False)
 

@@ -2,7 +2,6 @@ document.addEventListener("DOMContentLoaded", function() {
     const socket = io.connect('http://' + location.hostname + ':' + location.port);
 
     function parseAds() {
-        console.log('Parsing Ads');
         socket.emit('parse ads');
     }
     document.querySelector("#update").onclick = parseAds;

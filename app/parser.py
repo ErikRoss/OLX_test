@@ -99,7 +99,7 @@ class Parser:
                 if price == "":
                     price = None
                 else:
-                    price = int(price)
+                    price = int(float(price))
                 currency = price_value[-1]
             try:
                 image = soup.find('img', class_='css-1bmvjcs').get('src')
