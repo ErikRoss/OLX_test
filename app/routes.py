@@ -1,4 +1,5 @@
 import os
+import shutil
 
 from engineio.socket import Socket
 from flask import render_template, flash, redirect, url_for, request, session
@@ -63,12 +64,12 @@ def home():
         return redirect(url_for("login"))
 
 
-def delete_img(img):
-    file_path = ("app/static/img/" + img)
+def delete_imgs():
+    file_path = "app/static/img"
     try:
-        os.chmod(file_path, 0o777)
-        os.remove(file_path)
-        print("Image deleted")
+        for file in os.listdir(file_path):
+            os.remove(os.path.join(file_path, file))
+        print("Images deleted")
     except FileNotFoundError:
         print("File not found")
 
@@ -78,10 +79,9 @@ def delete_img(img):
 def clear_ads():
     if current_user.access_level in [1, 2, 3]:
         for ad in Ad.query.all():
-            if ad.image:
-                delete_img(ad.image)
             db.session.delete(ad)
         db.session.commit()
+        delete_imgs()
         flash("Объявления удалены")
         return redirect(url_for("home"))
 
