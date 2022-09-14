@@ -1,5 +1,5 @@
 document.addEventListener("DOMContentLoaded", function() {
-    const socket = io.connect('https://' + location.hostname + ':' + location.port);
+    const socket = io.connect('http://' + location.hostname + ':' + location.port);
 
     function parseAds() {
         console.log('parseAds');
@@ -53,7 +53,7 @@ document.addEventListener("DOMContentLoaded", function() {
 });
 
 function deleteAd(id) {
-    const socket = io.connect('https://' + location.hostname + ':' + location.port);
+    const socket = io.connect('http://' + location.hostname + ':' + location.port);
     console.log(id);
     socket.emit('delete ad', id);
 
